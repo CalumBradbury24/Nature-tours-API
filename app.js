@@ -1,5 +1,4 @@
 const express = require("express");
-const app = express(); //express methods added to app
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
@@ -10,12 +9,20 @@ const path = require("path"); //Built innode module for mnipulating path names
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
+//BEFORE BUILDING FOR PRODUCTION, NEED TO INTALL COMPRESSION
+const compression = require('compression');
+
 const tourRouter = require("./Routes/tour-routes");
 const userRouter = require("./Routes/user-routes");
 const reviewRouter = require("./Routes/review-routes");
 const viewRouter = require('./Routes/view-routes');
 const AppError = require("./Utils/app-error");
 const globalErrorHandler = require("./Controllers/error-controller");
+
+// Start express app
+const app = express(); //express methods added to app
+
+app.enable('trust proxy'); //Allows reading of x-forwarded-proto header
 
 app.set("view engine", "pug"); //pug is automatically contained in node, doesn't need to be installed
 app.set("views", path.join(__dirname, "Views")); //Path received from somewhere might have a / but might not so using this allows node to create the correct path
@@ -76,6 +83,9 @@ app.use(
     ],
   })
 );
+
+//Middleware to compress all text that is sent to clients on api responses
+app.use(compression());
 
 //This middleware allows the event handler to see exactly when a request happens!
 app.use((req, res, next) => {

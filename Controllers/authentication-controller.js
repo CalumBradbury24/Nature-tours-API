@@ -24,7 +24,7 @@ const signToken = (id) => {
 };
 
 //Function for creating and sending a jwt token
-const createAndSendJWTToken = (user, statusCode, res) => {
+const createAndSendJWTToken = (user, statusCode, res, req) => {
   const jwToken = signToken(user._id);
 
   //Can see this in the cookie tab in postman
@@ -35,12 +35,12 @@ const createAndSendJWTToken = (user, statusCode, res) => {
     ), //Convert to milliseconds
     //secure: true, //Send on encrypted connection (using HTTPS), - only want this when in production
     httpOnly: true, //Cookie cannot be accessed or modified in any way by the browser
+    secure: (req.secure || req.headers('x-forwarded-proto' === 'https'))//If secure header is set to https set secure=true
   };
 
   //Send JWT as a cookie - A cookie is a small piece of text that a server can send to clients,
   //when the client's browser receives the cookie it will automatically be stored and sent back in all future requests to the server it came from
-  if (process.env.NODE_ENV === "production") cookieOptions.secure = true; //When in production set secure=true, in dev just send expiry date and http config
-  res.cookie("jwt", jwToken, cookieOptions);
+  res.cookie("jwt", jwToken, cookieOptions); //Send jwt as cookie to browser
 
   //Remove password from the response output
   user.password = undefined;
@@ -80,7 +80,7 @@ const signup = catchAsync(async (req, res, next) => {
     role: role,
   }); //Create new user with the data in the body of the request - can use User.save() aswell
 
-  createAndSendJWTToken(newUser, 201, res);
+  createAndSendJWTToken(newUser, 201, req, res);
 });
 
 //logging a user in consists of signing a jwt and sending it back to the client if the user actually exists and the password is correct
@@ -103,7 +103,7 @@ const login = catchAsync(async (req, res, next) => {
   }
 
   //3) If everything is okay, send jwt back to client
-  createAndSendJWTToken(user, 200, res);
+  createAndSendJWTToken(user, 200, req, res);
 });
 
 const protect = catchAsync(async (req, res, next) => {
@@ -276,7 +276,7 @@ const resetPassword = catchAsync(async (req, res, next) => {
   await user.save(); //Want validator on to make sure password and password confirm at equal
 
   //3) Log the user in, send JWT
-  createAndSendJWTToken(user, 200, res);
+  createAndSendJWTToken(user, 200, req, res);
 });
 
 const updatePassword = catchAsync(async (req, res, next) => {
@@ -295,7 +295,7 @@ const updatePassword = catchAsync(async (req, res, next) => {
   await user.save(); //Validation is done by the validation function on the schema
 
   //4) Log user in
-  createAndSendJWTToken(user, 200, res);
+  createAndSendJWTToken(user, 200, req, res);
 });
 
 module.exports = {

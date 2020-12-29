@@ -27,7 +27,7 @@ mongoose //Connect to mongodB database
   })
   .then(() => console.log("DB connection successful"));
 
-//start server
+//start server on environment port (heroku port etc)
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, (error) => {
   if (error) throw error;
@@ -46,3 +46,10 @@ process.on("unhandledRejection", (error) => {
   });
 });
 
+//An event that can be emmited by heroku and cause the app to close
+process.on("SIGTERM", () => {
+  console.log("SIGTERM RECEIVED. Shutting down gracefully");
+  server.close(() => {
+    process.exit(1);
+  });
+});
