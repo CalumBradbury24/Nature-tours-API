@@ -31,17 +31,14 @@ app.set("views", path.join(__dirname, "Views")); //Path received from somewhere 
 //Always put middleware near the top so that it is on the stack before functions that need it are used (otherwise it wont be used by those functions)
 //middleware sits in between (or in the middle of) the request coming in and the response being sent (acts on the data before sending it in the response)
 console.log("Current environment is:", process.env.NODE_ENV); //- log environment
+app.use(cors()); //Allow cross origin resource sharing
+app.options('*', cors()); //Do this on all routes *
 
 //Allows serving the static html in Public folder, all static assets are always served from the Public folder (i.e css in pug templates etc)
 app.use(express.static(path.join(__dirname, "Public"))); // localhost:3000/overview.html for example
 
 // Set some security HTTP headers
 app.use(helmet());
-
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true,
-})); //Allow cross origin resource sharing
 
 //Development logging
 if (process.env.NODE_ENV === "development") {
